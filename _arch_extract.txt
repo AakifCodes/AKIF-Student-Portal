@@ -1,0 +1,431 @@
+
+
+===== PAGE 1 =====
+Student Portal Engineering Guide — Page 1 
+Student Portal — Complete Architecture & 
+Engineering Guide 
+Prepared for: Muhammad Akif Alvi    Roll No: 24SP-028-SE 
+Version 3 — Finalized with only two user roles: ADMIN and STUDENT. 
+1. Project Vision & Scope 
+The Student Portal is a professional full-stack university management system designed as a secure, maintainable and 
+testable application rather than a basic CRUD project. The system has exactly two roles: ADMIN and STUDENT. 
+2. User Roles 
+Role Responsibilities 
+ADMIN Manage students, courses, departments, enrollments, attendance records, results, assignments, 
+announcements, notifications and timetables. Manage portal-level settings and user accounts. 
+STUDENT View profile, enrolled courses, attendance, results, assignments, submissions, announcements, 
+notifications and timetable. Students can perform only actions explicitly allowed to them. 
+Important RBAC rule: there is no TEACHER role in this architecture. All role-based authorization, JWT examples, UI 
+routing, API permissions and database logic use only ADMIN and STUDENT. 
+3. Final Technology Stack 
+Layer Technology 
+Frontend React + TypeScript + Tailwind CSS 
+Routing React Router 
+Client State Redux Toolkit 
+Server/API State RTK Query 
+Backend Python + FastAPI 
+Validation Pydantic / Pydantic Settings 
+Database MongoDB 
+DB Access PyMongo 
+Authentication JWT + secure password hashing 
+Authorization RBAC — Admin / Student 
+Middleware CORS and authentication dependencies 
+Testing Pytest, Vitest, React Testing Library, Playwright 
+Quality Black, isort, Flake8, Pylint, mypy, Bandit, ESLint, Prettier 
+Tools Git, GitHub, Postman, VS Code 
+
+===== PAGE 2 =====
+Student Portal Engineering Guide — Page 2 
+4. High-Level Architecture 
+USER 
+↓ 
+React + TypeScript + Tailwind 
+↓ 
+React Router / Redux Toolkit / RTK Query 
+↓ 
+REST API + JSON 
+↓ 
+FastAPI 
+↓ 
+CORS → Authentication/JWT → RBAC → Pydantic Validation 
+↓ 
+Router → Service Layer → Repository Layer 
+↓ 
+MongoDB 
+The frontend and backend are separate applications. During development, React commonly runs on port 5173 and 
+FastAPI on port 8000. Because they are different origins, FastAPI should explicitly configure CORS for the frontend 
+origin. 
+5. Recommended Repository Structure 
+student-portal/ 
+■■■ frontend/ 
+■ ■■■ src/ 
+■ ■ ■■■ app/ 
+■ ■ ■■■ components/ 
+■ ■ ■■■ features/ 
+■ ■ ■ ■■■ auth/ 
+■ ■ ■ ■■■ students/ 
+■ ■ ■ ■■■ courses/ 
+■ ■ ■ ■■■ attendance/ 
+■ ■ ■ ■■■ results/ 
+■ ■ ■ ■■■ assignments/ 
+■ ■ ■ ■■■ announcements/ 
+■ ■ ■ ■■■ notifications/ 
+■ ■ ■■■ pages/ 
+■ ■ ■ ■■■ admin/ 
+■ ■ ■ ■■■ student/ 
+■ ■ ■■■ routes/ 
+■ ■ ■■■ services/ 
+■ ■ ■■■ types/ 
+■ ■ ■■■ utils/ 
+■ ■■■ .env 
+■ ■■■ .env.example 
+■ ■■■ package.json 
+■ 
+■■■ backend/ 
+■ ■■■ app/ 
+■ ■ ■■■ main.py 
+■ ■ ■■■ config/ 
+■ ■ ■■■ database/ 
+■ ■ ■■■ models/ 
+■ ■ ■■■ schemas/ 
+■ ■ ■■■ routes/ 
+■ ■ ■■■ services/ 
+■ ■ ■■■ repositories/ 
+■ ■ ■■■ dependencies/ 
+■ ■ ■■■ middleware/ 
+■ ■ ■■■ utils/ 
+■ ■■■ tests/ 
+■ ■■■ .env 
+
+===== PAGE 3 =====
+Student Portal Engineering Guide — Page 3 
+■ ■■■ .env.example 
+■ ■■■ requirements.txt 
+■ 
+■■■ .gitignore 
+6. Backend Layered Architecture 
+Router: receives HTTP requests. Schema: validates request/response data. Service: contains business rules. 
+Repository: handles MongoDB operations. Authentication/Dependency layer: validates JWT and identifies the 
+current user. Authorization: checks whether the current user is ADMIN or STUDENT and whether that role has 
+permission for the requested operation. 
+7. OOP Concepts Used 
+Classes/Objects: services, repositories and security components where class-based design is beneficial. 
+Encapsulation: database and security implementation details remain inside dedicated components. Abstraction: 
+services expose business operations without exposing MongoDB implementation. Polymorphism: may be used for 
+genuinely interchangeable strategies. Composition: preferred over unnecessary inheritance. 
+8. SOLID + Engineering Principles 
+S: Single Responsibility. O: Open/Closed. L: Liskov Substitution. I: Interface Segregation. D: Dependency Inversion. 
+Also follow DRY, KISS, Separation of Concerns, YAGNI, fail-fast and least privilege. 
+9. Design Patterns 
+Repository Pattern: isolates MongoDB operations. Service Layer: isolates business rules. Dependency Injection: 
+FastAPI dependencies provide reusable database/auth components. Strategy: only where multiple interchangeable 
+algorithms genuinely exist. Factory/Adapter can be introduced only when they solve a real problem.  
+
+===== PAGE 4 =====
+Student Portal Engineering Guide — Page 4 
+10. Authentication & Password Security 
+Passwords must never be stored as plaintext. At registration, the password is converted into a secure one-way hash. 
+At login, the submitted password is verified against the stored hash. The database stores only the password hash. 
+Bcrypt: If bcrypt is selected, use a maintained implementation and an appropriate work factor. A maintained 
+password-hashing abstraction can also be used to make future algorithm upgrades easier. 
+Registration: 
+plain password 
+↓ 
+bcrypt password hashing 
+↓ 
+password_hash 
+↓ 
+MongoDB users collection 
+Login: 
+email/username + password 
+↓ 
+retrieve user 
+↓ 
+verify password against password_hash 
+↓ 
+issue JWT ↓ protected 
+API request 
+Example: 
+import bcrypt 
+def hash_password(password: str) -> str: 
+hashed = bcrypt.hashpw( 
+password.encode("utf-8"), 
+bcrypt.gensalt() ) return 
+hashed.decode("utf-8") 
+def verify_password(password: str, password_hash: str) -> bool: 
+return bcrypt.checkpw( 
+password.encode("utf-8"), 
+password_hash.encode("utf-8") 
+) 
+Never log passwords or expose password hashes in API responses. 
+11. JWT + RBAC — Admin & Student Only 
+Login 
+↓ 
+Verify credentials 
+↓ 
+Create JWT with user identity + role 
+↓ 
+Protected request 
+↓ 
+Validate JWT 
+↓ 
+Identify current user 
+↓ 
+Check role: ADMIN or STUDENT 
+↓ 
+Allow / reject operation 
+ADMIN permissions: portal management and administrative CRUD operations. STUDENT permissions: access their 
+own profile and academic information, plus actions specifically assigned to students. A student must not gain admin 
+privileges by manually changing frontend routes or request payloads; authorization must be enforced on the backend.  
+
+===== PAGE 5 =====
+Student Portal Engineering Guide — Page 5 
+12. CORS Middleware 
+from fastapi.middleware.cors import CORSMiddleware 
+app.add_middleware( CORSMiddleware, 
+allow_origins=[settings.frontend_url], 
+allow_credentials=True, 
+allow_methods=["*"], 
+allow_headers=["*"], ) 
+In production, use an explicit trusted-origin allowlist.  
+
+===== PAGE 6 =====
+Student Portal Engineering Guide — Page 6 
+13. Environment Variables & Secret Management 
+Environment-specific configuration and secrets must not be hard-coded into source files. Use typed configuration such 
+as Pydantic Settings for the backend. 
+13.1 Backend .env 
+# backend/.env 
+MONGODB_URL=mongodb://localhost:27017 
+DATABASE_NAME=student_portal 
+JWT_SECRET=replace-with-a-long-random-secret 
+JWT_ALGORITHM=HS256 
+FRONTEND_URL=http://localhost:5173 
+The real .env file contains local secrets/configuration and must not be committed to Git. 
+13.2 Backend .env.example 
+# backend/.env.example 
+MONGODB_URL= 
+DATABASE_NAME=student_portal 
+JWT_SECRET= 
+JWT_ALGORITHM=HS256 
+FRONTEND_URL=http://localhost:5173 
+.env.example is committed as a template. It must contain placeholders only — never real secrets. 
+13.3 Frontend Environment Variables 
+# frontend/.env 
+VITE_API_URL=http://localhost:8000/api/v1 
+# frontend/.env.example 
+VITE_API_URL=http://localhost:8000/api/v1 
+Security warning: Vite variables prefixed with VITE_ are exposed to the browser bundle. Never put MongoDB 
+credentials, JWT signing secrets, private keys or other confidential secrets in VITE_ variables. 
+13.4 .gitignore 
+# Environment files 
+.env 
+.env.* 
+!.env.example 
+# Python 
+__pycache__/ 
+*.py[cod] 
+.pytest_cache/ 
+.mypy_cache/ 
+# Node 
+node_modules/ 
+dist/ 
+coverage/ 
+# IDE / OS 
+.vscode/ 
+.idea/ 
+.DS_Store 
+13.5 Typed Settings 
+from pydantic_settings import BaseSettings, SettingsConfigDict 
+class Settings(BaseSettings): 
+mongodb_url: str 
+database_name: str 
+jwt_secret: str 
+jwt_algorithm: str = "HS256" 
+frontend_url: str 
+model_config = 
+SettingsConfigDict( 
+
+===== PAGE 7 =====
+Student Portal Engineering Guide — Page 7 
+env_file=".env", 
+extra="ignore", ) 
+settings = Settings() 
+Use a long random JWT secret in real deployments. Production secrets should be supplied through a secure secret 
+manager or protected deployment environment configuration. 
+14. MongoDB Collections 
+Recommended collections: users, students, departments, courses, enrollments, attendance, results, assignments, 
+submissions, announcements, notifications and timetables. The users collection should include a controlled role value 
+containing only ADMIN or STUDENT. 
+Example user role values: 
+role: "ADMIN" role: "STUDENT" No 
+TEACHER role exists in this project.  
+
+===== PAGE 8 =====
+Student Portal Engineering Guide — Page 8 
+15. API Design 
+/api/v1/auth 
+/api/v1/students 
+/api/v1/courses 
+/api/v1/attendance 
+/api/v1/results 
+/api/v1/assignments 
+/api/v1/announcements 
+/api/v1/notifications 
+/api/v1/admin 
+API authorization must be enforced server-side. For example, admin-only endpoints should verify ADMIN role before 
+executing the operation. 
+16. Frontend Architecture 
+Use feature-based organization. Authentication, students, courses, attendance, results, assignments, announcements 
+and notifications should have focused modules. Use separate protected route areas for Admin and Student. React 
+Router handles navigation; Redux Toolkit handles client/global state; RTK Query handles API state, caching and 
+invalidation. 
+/admin 
+/admin/students 
+/admin/courses 
+/admin/attendance 
+/admin/results 
+/admin/assignments 
+/admin/announcements 
+/student 
+/student/profile 
+/student/courses 
+/student/attendance 
+/student/results 
+/student/assignments 
+/student/announcements 
+/student/notifications 
+/student/timetable 
+17. Testing Strategy 
+Backend: Pytest. Frontend: Vitest + React Testing Library. End-to-end: Playwright. Test authentication, 
+ADMIN/STUDENT authorization, validation, business rules, database operations and critical UI flows. 
+18. Code Quality & Security Toolchain 
+Python: Black, isort, Flake8, Pylint, mypy, Bandit, Pytest. Frontend: ESLint, TypeScript strict mode, Prettier, Vitest, 
+React Testing Library and Playwright. Use Husky/lint-staged and GitHub Actions for automated quality checks where 
+practical. 
+19. Core Security Checklist 
+✓ Only ADMIN and STUDENT roles exist 
+✓ Passwords hashed; never stored plaintext 
+✓ Password hash never returned to frontend 
+✓ JWT secret never hard-coded 
+✓ .env ignored by Git 
+✓ .env.example contains placeholders only 
+✓ No secrets in frontend VITE_ variables 
+✓ CORS uses trusted origins 
+✓ ADMIN-only operations checked on backend 
+✓ STUDENT access restricted to allowed resources 
+✓ Pydantic validates incoming data 
+✓ Bandit/security checks run regularly 
+
+===== PAGE 9 =====
+Student Portal Engineering Guide — Page 9 
+✓ Dependencies kept updated 
+✓ Sensitive data excluded from logs 
+✓ Production uses HTTPS and secure configuration 
+20. Development Order 
+1) Initialize Git and folder structure. 2) Configure frontend/backend environments. 3) Connect MongoDB. 4) Implement 
+settings. 5) Implement users and secure password hashing. 6) Implement login/JWT. 7) Implement ADMIN/STUDENT 
+RBAC. 8) Configure CORS. 9) Build core modules. 10) Add RTK Query endpoints. 11) Add tests. 12) Run 
+lint/type/security checks. 13) Add CI. 14) Deploy after security and testing checks pass. 
+21. Example End-to-End Admin Flow 
+Admin opens Students page 
+→ React Router checks protected admin route 
+→ RTK Query sends request 
+→ FastAPI receives request 
+→ CORS validates origin 
+→ JWT identifies current user 
+→ RBAC confirms ADMIN 
+→ Pydantic validates input 
+→ StudentService applies business rules 
+→ StudentRepository queries MongoDB 
+→ response schema returned 
+→ RTK Query updates cache 
+→ Admin UI displays data 
+22. Example End-to-End Student Flow 
+Student opens Attendance page 
+→ React Router checks protected student route 
+→ RTK Query sends request 
+→ FastAPI validates JWT 
+→ RBAC confirms STUDENT 
+→ Service checks that requested data belongs to the student 
+→ Repository queries MongoDB 
+→ response schema returned 
+→ RTK Query updates cache → 
+Student UI displays attendance 
+23. Definition of Done 
+A feature is complete when its UI, API route, validation, business logic, repository/database operation, authorization, 
+error handling, tests, documentation and code-quality checks are implemented as appropriate. Security-sensitive 
+features must additionally verify that passwords, secrets and protected data are not exposed. 
+24. Final Architecture Summary 
+ADMIN / STUDENT 
+↓ 
+React + TypeScript + Tailwind 
+↓ 
+React Router + Redux Toolkit + RTK Query 
+↓ 
+REST / JSON 
+↓ 
+FastAPI 
+↓ 
+CORS + JWT + RBAC + Pydantic 
+↓ 
+Service Layer 
+↓ 
+
+===== PAGE 10 =====
+Student Portal Engineering Guide — Page 10 
+Repository Layer 
+↓ 
+MongoDB 
+Security: 
+bcrypt/password 
+hashing + .env 
++ .env.example 
++ .gitignore 
++ secret management 
++ validation 
++ ADMIN/STUDENT authorization 
++ security testing 
+Final recommendation: keep the system modular, secure and understandable. Do not add complexity merely to use 
+more patterns. Every layer and tool should have a clear responsibility and measurable benefit. 
+ 
+
+===== PAGE 11 =====
+Student Portal Engineering Guide — Page 11 
+
+
+===== PAGE 12 =====
+Student Portal Engineering Guide — Page 12 
+
+
+===== PAGE 13 =====
+Student Portal Engineering Guide — Page 13 
+
+
+===== PAGE 14 =====
+Student Portal Engineering Guide — Page 14 
+
+
+===== PAGE 15 =====
+Student Portal Engineering Guide — Page 15 
+
+
+===== PAGE 16 =====
+Student Portal Engineering Guide — Page 16 
+
+
+===== PAGE 17 =====
+Student Portal Engineering Guide — Page 17 
+
+
+===== PAGE 18 =====
+Student Portal Engineering Guide — Page 18 
+
+
+===== PAGE 19 =====
+Student Portal Engineering Guide — Page 19 
+
+
+===== PAGE 20 =====
+Student Portal Engineering Guide — Page 20 
+ 

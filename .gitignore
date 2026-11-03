@@ -1,0 +1,38 @@
+# Secrets and machine-specific environment
+.env
+.env.*
+!.env.example
+*.local
+
+# Python virtual environments and generated files
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+*.egg-info/
+
+# Node dependencies and generated build output
+node_modules/
+dist/
+build/
+coverage/
+
+# Deployment and tool caches
+.vercel/
+.vite/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
